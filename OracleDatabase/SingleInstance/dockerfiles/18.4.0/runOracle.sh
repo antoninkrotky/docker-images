@@ -166,6 +166,9 @@ trap _term SIGTERM
 # Set SIGKILL handler
 trap _kill SIGKILL
 
+#on CentOS cmd "su - oracle" ended with error due to limits
+rm -rf /etc/security/limits.d/oracle-database-preinstall-18c.conf
+
 # Check whether database already exists
 if [ -d $ORACLE_BASE/oradata/$ORACLE_SID ]; then
    symLinkFiles;

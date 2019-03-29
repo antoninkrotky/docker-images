@@ -1,3 +1,77 @@
+# Step by Step:
+
+## Install docker (Amazon Linux)
+
+https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html
+```
+sudo yum update -y
+sudo yum install docker
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+sudo chkconfig docker on
+docker info
+```
+
+## Prune docker
+ * stop all running docker jobs (docker ps -a + docker stop <)
+ * docker system prune -a
+
+## How to create an image
+```
+sudo yum install git
+download  https://www.oracle.com/technetwork/database/database-technologies/express-edition/downloads/index.html
+git clone git clone https://github.com/antoninkrotky/docker-images.git
+mv ~/oracle-database-xe-18c-1.0-1.x86_64.rpm ~/docker-images/OracleDatabase/SingleInstance/dockerfiles/18.4.0
+cd ~/docker-images/OracleDatabase/SingleInstance/dockerfiles/
+./buildDockerImage.sh -v 18.4.0 -x
+cd
+mv ~/docker-images/OracleDatabase/SingleInstance/dockerfiles/18.4.0/oracle-database-xe-18c-1.0-1.x86_64.rpm ~
+rm -rf ~/docker-images
+```
+
+## Run Container
+```
+cd
+sudo useradd -u 54321 oracle
+mkdir ~/oracle
+mkdir ~/oracle/oradata
+mkdir ~/oracle/scripts
+mkdir ~/oracle/scripts/startup
+mkdir ~/oracle/scripts/setup
+sudo chown oracle:oracle -R ~/oracle
+sudo chmod 755 -R ~/oracle
+
+docker network create oracle_network
+docker run -d  \
+  --name oracle \
+  -p 11521:1521 \
+  -p 15500:5500 \
+  -p 18080:8080 \
+  --volume ~/oracle/oradata:/opt/oracle/oradata \
+  --volume ~/oracle/scripts/startup:/opt/oracle/scripts/startup \
+  --volume ~/oracle/scripts/setup:/opt/oracle/scripts/setup \
+  --network=oracle_network \
+  oracle/database:18.4.0-xe
+```
+
+Read output (there is the init password):
+```docker logs oracle```
+
+Start an existing container
+```docker start oracle```
+
+Change password in running container
+```docker exec oracle ./setPassword.sh <pwd>```
+
+Connect to sqlplus
+```docker exec -ti oracle sqlplus system@XEPDB1```
+
+Connect to bash
+```docker exec -it oracle bash -c "source /home/oracle/.bashrc; bash"```
+
+Info about running containers
+```docker ps```
+
 # Oracle Database on Docker
 Sample Docker build files to facilitate installation, configuration, and environment setup for DevOps users. For more information about Oracle Database please see the [Oracle Database Online Documentation](https://docs.oracle.com/en/database/oracle/oracle-database/index.html).
 
